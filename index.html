@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Белое полотно для мыслей. Пишите, перемещайте слова и соединяйте их линиями." />
+    <title>Полотно — место для мыслей</title>
+  </head>
+  <body>
+    <main id="app" class="workspace" aria-label="Полотно для мыслей" tabindex="0">
+      <svg id="drawing-layer" aria-label="Линии и соединения"></svg>
+      <svg id="guides-layer" aria-hidden="true"></svg>
+      <div id="nodes-layer"></div>
+
+      <div id="empty-state" class="empty-state">
+        <button id="start-typing" class="start-typing floating-ui" type="button">Начать писать</button>
+        <p class="empty-description"><span class="mouse-hint">Или дважды щёлкните в любом месте полотна</span><span class="touch-hint">Или дважды коснитесь полотна</span></p>
+      </div>
+
+      <header class="board-header">
+        <div class="toolbar floating-ui" role="toolbar" aria-label="Инструменты полотна">
+          <button id="line-tool" class="tool-button" type="button" aria-label="Рисовать линии" aria-pressed="false" title="Рисовать линии (Alt+L)"></button>
+          <button id="text-tool" class="tool-button" type="button" aria-label="Шрифт и обводка" aria-expanded="false" aria-controls="settings-popover" title="Шрифт и обводка"></button>
+          <span class="toolbar-divider" aria-hidden="true"></span>
+          <button id="undo-tool" class="tool-button" type="button" aria-label="Отменить" title="Отменить (Ctrl / ⌘ Z)" disabled></button>
+        </div>
+        <div id="mode-indicator" class="mode-indicator" role="status" hidden>Рисование · двойной клик — текст <kbd>Esc</kbd></div>
+      </header>
+
+      <section id="settings-popover" class="popover floating-ui" aria-label="Шрифт и обводка" hidden>
+        <div class="popover-header"><span>Текст и линии</span><button id="close-settings" class="tool-button small" aria-label="Закрыть настройки" type="button"></button></div>
+        <div class="popover-section">
+          <label class="field-label" for="font-family">Шрифт</label>
+          <div class="settings-row">
+            <select id="font-family" aria-label="Шрифт"><option value="sans">Без засечек</option><option value="serif">С засечками</option><option value="mono">Моноширинный</option></select>
+            <input id="font-size" type="number" min="12" max="96" value="24" aria-label="Размер шрифта" />
+          </div>
+          <div id="format-options" class="segmented-control" role="group" aria-label="Начертание"></div>
+        </div>
+        <div class="popover-section">
+          <span class="field-label">Цвет</span>
+          <div id="color-options" class="color-swatches" role="group" aria-label="Цвет текста и линий"></div>
+        </div>
+        <div class="popover-section">
+          <span class="field-label">Обводка слов</span>
+          <div id="shape-options" class="segmented-control shape-options" role="group" aria-label="Форма обводки"></div>
+        </div>
+        <div class="popover-section board-file-section">
+          <span class="field-label">Доска</span>
+          <div class="board-file-actions">
+            <button id="save-board" class="file-action" type="button">Сохранить в файл</button>
+            <button id="open-board" class="file-action" type="button">Открыть файл</button>
+          </div>
+          <input id="board-file" type="file" accept=".polotno,.json,application/json" hidden />
+        </div>
+        <p class="popover-note">Выберите слова, чтобы изменить их.<br />Обведите слово линией — появится рамка.</p>
+      </section>
+
+      <div id="text-menu" class="context-toolbar floating-ui" role="toolbar" aria-label="Форматирование текста" hidden></div>
+      <div id="selection-actions" class="selection-actions contextual-actions floating-ui" role="toolbar" aria-label="Действия с текстом" hidden>
+        <button id="split-text" type="button">Разделить на слова</button>
+        <button id="merge-text" type="button">Объединить</button>
+      </div>
+      <div id="connection-actions" class="connection-actions contextual-actions floating-ui" role="toolbar" aria-label="Действия со связью" hidden>
+        <button id="reset-connection" type="button">Выпрямить</button>
+        <button id="delete-connection" class="destructive-action" type="button">Удалить связь</button>
+      </div>
+      <div class="viewport-controls floating-ui" role="toolbar" aria-label="Масштаб полотна">
+        <button id="zoom-out" class="viewport-button" type="button" aria-label="Уменьшить" title="Уменьшить">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+        </button>
+        <button id="zoom-reset" class="zoom-value" type="button" title="Масштаб 100 %">100 %</button>
+        <button id="zoom-in" class="viewport-button" type="button" aria-label="Увеличить" title="Увеличить">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5v14" /></svg>
+        </button>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <button id="fit-board" class="viewport-button" type="button" aria-label="Показать всю доску" title="Показать всю доску">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5" /><rect x="8" y="8" width="8" height="8" rx="1" /></svg>
+        </button>
+      </div>
+      <div id="selection-rect" class="selection-rect" hidden></div>
+      <div id="toast" class="toast" role="status" hidden></div>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

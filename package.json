@@ -1,0 +1,19 @@
+{
+  "name": "thought-canvas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "build:standalone": "npm run build && node scripts/export-html.mjs",
+    "build:pages": "npm run build:standalone && node scripts/build-pages.mjs",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "npm run build:standalone && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "vite": "^7.1.0"
+  }
+}

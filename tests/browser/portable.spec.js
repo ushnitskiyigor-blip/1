@@ -1,0 +1,31 @@
+import { readFile } from 'node:fs/promises';
+import { test, expect } from '@playwright/test';
+
+test('portable HTML supports text and drawing in a sandbox without network or storage access', async ({ page }) => {
+  const html = await readFile(new URL('../../dist/Polotno.html', import.meta.url), 'utf8');
+  const errors = [];
+  const requests = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('request', request => requests.push(request.url()));
+  await page.goto('about:blank');
+  await page.context().setOffline(true);
+  await page.setContent('<style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%}</style><iframe title="Автономное полотно" sandbox="allow-scripts"></iframe>');
+  await page.locator('iframe').evaluate((frame, contents) => { frame.srcdoc = contents; }, html);
+  const canvas = page.frameLocator('iframe');
+  await canvas.getByRole('button', { name: 'Начать писать', exact: true }).click();
+  await expect(canvas.locator('.node-content')).toBeFocused();
+  await page.keyboard.insertText('Можно печатать');
+  await page.keyboard.press('Enter');
+  await expect(canvas.locator('.node-content')).toHaveText('Можно печатать');
+  await canvas.locator('#line-tool').click();
+  await page.mouse.move(200, 250); await page.mouse.down();
+  await page.mouse.move(450, 300, { steps: 20 }); await page.mouse.up();
+  await expect(canvas.locator('path.stroke')).toHaveCount(1);
+  await canvas.locator('#app').dblclick({position:{x:250,y:500}});
+  await page.keyboard.insertText('И после рисования');
+  await page.keyboard.press('Enter');
+  await expect(canvas.locator('.node-content')).toHaveText(['Можно печатать', 'И после рисования']);
+  await expect(canvas.locator('#line-tool')).toHaveAttribute('aria-pressed', 'false');
+  expect(errors).toEqual([]);
+  expect(requests).toEqual([]);
+});
